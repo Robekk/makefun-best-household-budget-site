@@ -1,11 +1,11 @@
-// Hearth & Ledger — the pages.
+// Tally House — the pages.
 //
 // Every view is drawn from the same computed book (see book() in main.js):
 // totals are summed from the ledger at render time, so a change made on
 // any page — a budget line edited, a bill marked paid, a transaction
 // added — shows up everywhere at once.
 
-import { CATEGORIES, GOALS, HOUSEHOLD } from './data.js';
+import { CATEGORIES, GOALS, HOUSEHOLD, RULE_503020 } from './data.js';
 
 export const money = (n, cents = false) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
@@ -32,6 +32,15 @@ export function overview(book, monthLabel) {
   const due = book.bills.filter((b) => !b.paid);
   const dueTotal = due.reduce((s, b) => s + b.amount, 0);
   const biggest = topCats[0];
+  const sumCats = (ids) => ids.reduce((s, id) => s + (byCat[id] || 0), 0);
+  const needs = sumCats(RULE_503020.needs);
+  const wants = sumCats(RULE_503020.wants);
+  const kept = saved + Math.max(0, left);
+  const ruleRows = [
+    { name: 'Needs', amt: needs, target: 50, color: '#1d4d33', verdict: pct(needs, income) <= 50 ? 'inside the line' : 'over the line' },
+    { name: 'Wants', amt: wants, target: 30, color: '#e0a458', verdict: pct(wants, income) <= 30 ? 'inside the line' : 'over the line' },
+    { name: 'Kept', amt: kept, target: 20, color: '#2e7d5b', verdict: pct(kept, income) >= 20 ? 'ahead of the line' : 'behind the line' },
+  ];
 
   const weekBars = weeks.map((w, i) =>
     `<div class="wk"><div class="wk-bar" style="height:${Math.round((w / maxWeek) * 84)}px" title="${money(w)}"></div><span>W${i + 1}</span><strong>${money(w)}</strong></div>`).join('');
@@ -49,6 +58,16 @@ export function overview(book, monthLabel) {
     <div class="stat"><span class="stat-label">Money out</span><strong>${money(spent)}</strong><small>Across ${CATEGORIES.length} budget pots</small></div>
     <div class="stat"><span class="stat-label">Put into goals</span><strong>${money(saved)}</strong><small>${GOALS.length} savings goals funded</small></div>
     <div class="stat ${left < 0 ? 'stat-warn' : ''}"><span class="stat-label">Left unspent</span><strong>${money(left)}</strong><small>${left >= 0 ? 'Breathing room at month’s end' : 'Over the line — see the budget page'}</small></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>The 50/30/20 check</h2><a href="#/reports">More reports →</a></div>
+    <div class="rule-bar">${ruleRows.map((r) => `<span style="width:${pct(r.amt, income)}%;background:${r.color}" title="${r.name} ${money(r.amt)}"></span>`).join('')}</div>
+    <div class="rule-nums">
+      ${ruleRows.map((r) => `<span class="rule-item"><span class="dot" style="background:${r.color}"></span>${r.name} <strong>${pct(r.amt, income)}%</strong> <small>of money in · aim ${r.target}% · ${r.verdict}</small></span>`).join('')}
+    </div>
+    <p class="card-note">The old rule of thumb — half of income on needs, a third or less on wants,
+    a fifth kept — measured against this month's real ledger, not a guess.</p>
   </section>
 
   <div class="cols">
@@ -76,7 +95,7 @@ export function overview(book, monthLabel) {
       <h3 class="mini-head">Still to pay this month</h3>
       ${due.length ? due.map((b) => `<div class="due-row"><span>${b.name}</span><span class="due-when">due the ${b.dueDay}th</span><strong>${money(b.amount)}</strong></div>`).join('')
         : '<p class="card-note">Every bill for this month is paid. 🎉</p>'}
-      ${due.length ? `<p class="card-note">${money(dueTotal)} still to go out — already counted in the plan on the <a href="#/bills">Bills page</a>.</p>` : ''}
+      ${due.length ? `<p class="card-note">${money(dueTotal)} still to go out. Once it does, the month ends about <strong>${money(left - dueTotal)}</strong> unspent — the plan is on the <a href="#/bills">Bills page</a>.</p>` : ''}
     </section>
   </div>
 
@@ -199,9 +218,11 @@ export function bills(book, monthLabel) {
   <section class="hero"><h1>Bills — ${monthLabel}</h1>
   <p class="lede">The fixed costs, in due-date order. Mark one paid and it stays paid —
   the overview’s “still to pay” list and this page’s totals follow along.</p></section>
-  <section class="stat-grid two">
+  <section class="stat-grid">
     <div class="stat"><span class="stat-label">Paid so far</span><strong>${money(paidSum)}</strong><small>${paid.length} of ${book.bills.length} bills settled</small></div>
     <div class="stat"><span class="stat-label">Still due</span><strong>${money(dueSum)}</strong><small>${due.length ? due.map((b) => `${b.name.split('—')[0].trim()} on the ${b.dueDay}th`).join(' · ') : 'Nothing outstanding'}</small></div>
+    <div class="stat"><span class="stat-label">Month ends at</span><strong>${money(book.income - book.spent - book.saved - dueSum)}</strong><small>Unspent once every open bill has gone out</small></div>
+    <div class="stat"><span class="stat-label">On autopay</span><strong>${book.bills.filter((b) => b.autopay).length} of ${book.bills.length}</strong><small>Only water and school meals are paid by hand</small></div>
   </section>
   <section class="card"><div class="bill-rows">
     ${[...book.bills].sort((a, b) => a.dueDay - b.dueDay).map(row).join('')}
@@ -225,6 +246,12 @@ export function goals(book) {
       ${bar(g.saved, g.target, g.color, 14)}
       <div class="goal-nums"><span><strong>${money(g.saved)}</strong> saved</span><span><strong>${money(remaining)}</strong> to go</span><span>Target <strong>${money(g.target)}</strong></span></div>
       <p class="goal-eta">${eta}${inThisMonth ? ` · ${money(inThisMonth)} added this month` : ''}</p>
+      <div class="sim">
+        <label for="sim-${g.id}">Try a different pace — <strong>$<span data-sim-val="${g.id}">${g.monthly || 100}</span>/month</strong></label>
+        <input id="sim-${g.id}" type="range" min="25" max="1000" step="25" value="${g.monthly || 100}"
+          data-sim="${g.id}" data-target="${g.target}" data-saved="${g.saved}">
+        <p class="sim-out">At that pace: <strong data-sim-out="${g.id}"></strong></p>
+      </div>
     </article>`;
   }).join('');
   return `

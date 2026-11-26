@@ -1,4 +1,4 @@
-// Hearth & Ledger — the household's books.
+// Tally House — the household's books.
 //
 // One ledger, kept honestly: every total on every page is summed from the
 // transactions below, so the overview, the budget, the bills and the
@@ -137,3 +137,11 @@ export const GOALS = [
 ];
 
 export const ACCOUNTS = ['Everyday checking', 'Joint card', 'Savings'];
+
+// The 50/30/20 rule of thumb, mapped onto this household's pots: needs
+// are the cost of staying housed, fed and getting around; wants are the
+// fun of it; and "kept" is goal transfers plus whatever is left unspent.
+export const RULE_503020 = {
+  needs: ['housing', 'utilities', 'groceries', 'transport', 'health', 'kids'],
+  wants: ['dining', 'home', 'subs', 'fun', 'clothing', 'pets'],
+};

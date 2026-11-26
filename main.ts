@@ -1,4 +1,4 @@
-// Hearth & Ledger — the hand-in program (Node 22, standard library only).
+// Tally House — the hand-in program (Node 22, standard library only).
 //
 // The site itself is the app/ folder beside this file: plain static files
 // (index.html, style.css, data.js, views.js, main.js) that a browser runs
@@ -41,4 +41,4 @@ writeFileSync(
   }),
 );
 
-console.log(`Hearth & Ledger handed in: app/ and screenshots/ copied to ${out}, dossier.json written.`);
+console.log(`Tally House handed in: app/ and screenshots/ copied to ${out}, dossier.json written.`);

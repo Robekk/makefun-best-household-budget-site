@@ -1,4 +1,4 @@
-/* Hearth & Ledger — a paper ledger, kept tidy.
+/* Tally House — a paper ledger, kept tidy.
    Cream paper, deep-green ink, amber for warmth. System fonts only:
    the site must look the same with no network at all. */
 
@@ -207,6 +207,17 @@ main { max-width: 1060px; margin: 0 auto; padding: 26px 20px 10px; outline: none
 .trend-col small { color: var(--ink-soft); font-size: 12px; }
 .insights { margin: 0; padding-left: 19px; display: flex; flex-direction: column; gap: 9px; font-size: 14.5px; }
 
+/* ——— 50/30/20 rule + goal simulator ——— */
+.rule-bar { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: #eee5cd; margin-bottom: 10px; }
+.rule-bar span { display: block; height: 100%; }
+.rule-nums { display: flex; gap: 22px; flex-wrap: wrap; font-size: 14.5px; }
+.rule-item { display: flex; align-items: center; gap: 7px; }
+.rule-item small { color: var(--ink-soft); }
+.sim { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.sim label { font-size: 13.5px; color: var(--ink-soft); display: block; margin-bottom: 6px; }
+.sim input[type="range"] { width: 100%; accent-color: var(--green); }
+.sim-out { font-size: 13.5px; margin: 6px 0 0; }
+
 /* ——— Footer ——— */
 .sitefoot { max-width: 1060px; margin: 6px auto 0; padding: 18px 20px 30px; color: var(--ink-soft); font-size: 13.5px; }
 .sitefoot .foot-nav a { text-decoration: none; }
@@ -218,8 +229,8 @@ main { max-width: 1060px; margin: 0 auto; padding: 26px 20px 10px; outline: none
   .hero h1 { font-size: 26px; }
   .topbar { gap: 10px; padding: 9px 13px; }
   .brand-name { font-size: 18px; }
-  .topnav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
-  .topnav a { white-space: nowrap; padding: 6px 9px; font-size: 13.5px; }
+  .topnav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; gap: 0; margin-left: 0; }
+  .topnav a { white-space: nowrap; padding: 6px 7.5px; font-size: 13px; }
   .month-switch { margin-left: auto; }
   .month-switch span { min-width: 104px; font-size: 13px; }
   .stat-grid { grid-template-columns: 1fr 1fr; }

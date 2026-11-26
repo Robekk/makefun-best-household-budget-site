@@ -1,4 +1,4 @@
-// Hearth & Ledger — the bookkeeper.
+// Tally House — the bookkeeper.
 //
 // Holds the household's working state (the ledger, the limits as edited,
 // which bills are marked paid, the current month and the ledger filters),
@@ -79,7 +79,7 @@ function render() {
   else if (route === 'budget') { viewEl.innerHTML = views.budget(b, month.label); wireBudget(); }
   else if (route === 'transactions') { viewEl.innerHTML = views.transactions(b, month.label, state.filter); wireTransactions(); }
   else if (route === 'bills') { viewEl.innerHTML = views.bills(b, month.label); wireBills(); }
-  else if (route === 'goals') viewEl.innerHTML = views.goals(b);
+  else if (route === 'goals') { viewEl.innerHTML = views.goals(b); wireGoals(); }
   else if (route === 'reports') {
     const history = MONTHS.map((m) => { const hb = book(m.id); return { short: m.short, income: hb.income, spent: hb.spent, saved: hb.saved }; });
     viewEl.innerHTML = views.reports(b, month.label, history);
@@ -128,6 +128,32 @@ function rerenderLedgerOnly() {
   viewEl.innerHTML = views.transactions(book(month.id), month.label, state.filter);
   wireTransactions();
   if (active === 'f-q') { const el = viewEl.querySelector('#f-q'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+}
+
+// The goal simulator: slide a monthly pace and the finish line moves.
+// November 2026 is the current month, so a goal n months out lands in
+// the month n months after it.
+function simLine(target, saved, pace) {
+  const remaining = target - saved;
+  if (remaining <= 0) return 'already fully funded 🎉';
+  const months = Math.ceil(remaining / pace);
+  const when = new Date(2026, 10 + months, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return `${months} month${months === 1 ? '' : 's'} of saving — done by ${when}`;
+}
+
+function wireGoals() {
+  for (const input of viewEl.querySelectorAll('input[data-sim]')) {
+    const id = input.dataset.sim;
+    const valEl = viewEl.querySelector(`[data-sim-val="${id}"]`);
+    const outEl = viewEl.querySelector(`[data-sim-out="${id}"]`);
+    const update = () => {
+      const pace = Number(input.value);
+      valEl.textContent = String(pace);
+      outEl.textContent = simLine(Number(input.dataset.target), Number(input.dataset.saved), pace);
+    };
+    input.addEventListener('input', update);
+    update();
+  }
 }
 
 function wireBills() {
